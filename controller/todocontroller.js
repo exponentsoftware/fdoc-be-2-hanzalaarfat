@@ -142,20 +142,35 @@ exports.updatetodo = async (req, res) => {
       useFindAndModify: false,
     });
 
+    if (!todo) {
+      res.status(402).json({
+        success: false,
+        message: `Todo  unsuccessful update this id:${id}`,
+      });
+    }
+
     res.status(200).json({ success: true, message: todo });
   } catch (err) {
-    console.log(err);
+    // console.log(err);
+    res.status(402).json({
+      success: false,
+      message: `Todo  unsuccessful update this id:${id}`,
+      err,
+    });
   }
 };
 
 exports.deletetodo = async (req, res) => {
-  let id = req.params.id;
-  console.log(id);
-  const todo = await Todo.findOneAndDelete({ _id: id });
-
-  if (todo) {
-    res.status(201).json({ success: true, message: "Todo removed" });
-  } else {
-    res.status(404).json({ success: false, message: "page not found" });
+  try {
+    let id = req.params.id;
+    const todo = await Todo.findOneAndDelete({ _id: id });
+    console.log(todo);
+    if (todo) {
+      res.status(201).json({ success: true, message: "Todo removed" });
+    } else {
+      res.status(204).json({ success: false, message: "not deleted todo" });
+    }
+  } catch (err) {
+    res.status(204).json({ success: false, message: "not deleted todo", err });
   }
 };
