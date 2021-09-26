@@ -39,53 +39,68 @@ exports.addtodo = async (req, res) => {
   });
 };
 
-/////////////// Get All Todo and also filetr by query //////////////
+/////////////// Get All Todo and also filetr by create at //////////////
 
 exports.getalltodo = async (req, res) => {
-  ///////////////// Get all Todo //////////////////////////////
-  // const todo = await Todo.find();
-  const todo = await Todo.find().sort({ createdAt: -1 });
-
-  ///////////////// chcke todo  data found or Not//////////////////////////////
-  if (todo.length == 0) {
-    res.status(404).json({
-      success: false,
-      message: `Not Found any Todo Data`,
-      todo,
-    });
-  }
-
-  let key = "";
-  for (let k in req.query) {
-    key = k;
-  }
-
-  if (req.query[key]) {
-    req.query[key] == "true" ? (req.query[key] = true) : "";
-    req.query[key] == "false" ? (req.query[key] = false) : "";
-
-    ///////////////// if it has query then fillter by given key//////////////////////////////
-    ///////////////// // route ex http://localhost:3000/todo/?status=true   ////////////////////
-
-    const response = await todo.filter((ele) => {
-      return ele[key] == req.query[key];
-    });
-    ///////////////// chcke filterd data found or Not//////////////////////////////
-    if (response.length <= 0) {
-      res.status(404).json({
-        success: false,
-        message: `Not Found ${key} of Todo`,
-        todo: response,
-      });
+  try {
+    //////////////////////// Get all Todo //////////////////////////////
+    ///////////////// sorting Todo by createdAt //////////////////////////////
+    let key = [];
+    for (let k in req.query) {
+      key.push(k);
     }
-    ///////////////// Filterd data resposed//////////////////////////////
-    res
-      .status(200)
-      .json({ success: true, message: `All ${key} of Todo`, todo: response });
-  } else {
-    ///////////////// respose all todo whithout filtering route (/)//////////////////////////////
+    if (key.length == 0) {
+      console.log("should have no query string");
+      const todo = await Todo.find().sort({ createdAt: -1 });
 
-    res.status(200).json({ success: true, message: "All Todo", todo });
+      ///////////////// chcke todo  data found or Not//////////////////////////////
+      if (todo.length == 0) {
+        res.status(404).json({
+          success: false,
+          message: `Not Found any Todo Data`,
+          todo,
+        });
+      } else {
+        res.status(200).json({ success: true, message: "All Todo", todo });
+      }
+    } else {
+      let firstKey = key[0];
+
+      if (key.length == 1) {
+        // console.log(req.query[firstKey]);
+        firstKey == "true" ? (firstKey = true) : "";
+        req.query[key][0] == "false" ? (req.query[key][0] = false) : "";
+
+        ///////////////// if it has query then fillter by given key//////////////////////////////
+        ///////////////// // route ex http://localhost:3000/todo/?status=true   ////////////////////
+        ///////////////// // req.query = example {key : value}   ////////////////////
+
+        const response = await Todo.find(req.query).sort({
+          createdAt: -1,
+        });
+
+        ///////////////// chcke filterd data found or Not//////////////////////////////
+        if (response.length <= 0) {
+          res.status(404).json({
+            success: false,
+            message: `Not Found ${key} of Todo`,
+            todo: response,
+          });
+        }
+        ///////////////// Filterd data resposed//////////////////////////////
+        res.status(200).json({
+          success: true,
+          message: `All ${key} of Todo`,
+          todo: response,
+        });
+      } else {
+        ///////////////// respose all todo whithout filtering route (/)//////////////////////////////
+        res.status(400).json({ success: false, message: "Add only One key" });
+      }
+    }
+  } catch (err) {
+    // console.log(err);
+    res.status(404).json({ success: false, message: "data not found", err });
   }
 };
 
